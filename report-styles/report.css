@@ -1,0 +1,87 @@
+/* report.css — Milestone A skeleton
+ * Re:sum Monthly Report WebView
+ * Hosted: https://loveydb-danny.github.io/report-styles/report.css
+ *
+ * Milestone A: minimal reset + container/title/message layout only.
+ * Full 9-page design will be applied in Milestone B (Figma-based).
+ *
+ * SECURITY NOTE: No couple data, tokens, or sensitive values in this file.
+ * This file is publicly accessible via GitHub Pages.
+ */
+
+/* ── Reset ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Root container ── */
+.report-root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px 16px;
+  background-color: #ffffff;
+  color: #1a1a1a;
+}
+
+/* ── Title ── */
+.report-title {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+  margin-bottom: 12px;
+  color: #1a1a1a;
+}
+
+/* ── Subtitle / period label ── */
+.report-subtitle {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: center;
+  color: #888888;
+  margin-bottom: 32px;
+}
+
+/* ── Placeholder message (Milestone A) ── */
+.report-message {
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.6;
+  text-align: center;
+  color: #555555;
+}
+
+/* ── Photo placeholder (Milestone A: hidden; Milestone B: visible) ── */
+.report-photo {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.report-photo[src=""] {
+  display: none;
+}
+
+/* ── Loading indicator for photos ── */
+.report-photo-loading {
+  display: inline-block;
+  width: 100%;
+  height: 160px;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+}
