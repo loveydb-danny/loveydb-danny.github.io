@@ -16,6 +16,17 @@
   } catch (e) { data = {}; }
   var cfg = data.config || {};
 
+  // 에셋 베이스 URL — loadHtmlString엔 document base가 없어 상대경로 로드 실패.
+  // report.js 자신의 절대 src에서 베이스를 유도(앱·프리뷰 양쪽 동작). CSS url()은
+  // 스타일시트 기준이라 무관, 하지만 JS가 만드는 <img src>는 절대경로 필요.
+  var ASSET_BASE = (function () {
+    var s = document.querySelector('script[src*="report.js"]');
+    if (s && s.src) return s.src.replace(/report\.js(\?.*)?$/, '');
+    var l = document.querySelector('link[rel="stylesheet"][href*="report.css"]');
+    if (l && l.href) return l.href.replace(/report\.css(\?.*)?$/, '');
+    return '';
+  })();
+
   // ---------- helpers (no innerHTML — XSS 차단) ----------
   function h(tag, cls, txt) {
     var n = document.createElement(tag);
@@ -46,7 +57,7 @@
     var wrap = h('div', 'cover-wrap');
     // headline: 흰 로고 + title `0000년 0월의 우리`
     var hb = h('div', 'headline-block');
-    hb.appendChild(imgEl('logo', 'logo.svg', 'Re:sum'));
+    hb.appendChild(imgEl('logo', ASSET_BASE + 'logo.svg', 'Re:sum'));
     hb.appendChild(h('div', 'title', m.year + '년 ' + m.month + '월의 우리'));
     wrap.appendChild(hb);
     // wallpaper: 캘린더 캡처(B-1 앱 업로드 URL). 없으면 빈 흰 컨테이너.
