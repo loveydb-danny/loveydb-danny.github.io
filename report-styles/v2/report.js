@@ -61,112 +61,141 @@
     return wrap;
   }
 
-  function pageBrief(b) {
+  function pageBrief(d) {
     var c = h('div', 'content brief');
-    c.appendChild(headline(['이번 달, 우리는 ', span(b.record_count + '개'), '의 추억을 남겼어요']));
-    var cards = h('div', 'cards');
-    cards.appendChild(briefCard('기록한 추억', b.record_count + '개'));
-    cards.appendChild(briefCard('함께 담은 사진', b.photo_count + '장'));
+    c.appendChild(headline(['이달, 우리가 남긴 추억들']));
+    var cards = h('div', 'brief-cards');
+    var c1 = h('div', 'brief-card brief-card--1');
+    c1.appendChild(h('div', 'brief-card-label', '기록한 추억'));
+    c1.appendChild(h('div', 'brief-card-value', (d.record_count || 0) + '개'));
+    cards.appendChild(c1);
+    var c2 = h('div', 'brief-card brief-card--2');
+    c2.appendChild(h('div', 'brief-card-label', '추억의 사진'));
+    c2.appendChild(h('div', 'brief-card-value', (d.photo_count || 0) + '장'));
+    cards.appendChild(c2);
     c.appendChild(cards);
     return c;
   }
-  function briefCard(label, num) {
-    var card = h('div', 'card');
-    card.appendChild(h('div', 'label', label));
-    card.appendChild(h('div', 'num', num));
-    return card;
-  }
 
-  function pageNewspot(n) {
+  function pageNewspot(d) {
     var c = h('div', 'content newspot');
-    c.appendChild(headline(['새롭게 발견한 ', span((n.total || 0) + '곳'), '의 장소']));
-    var deck = h('div', 'deck');
-    (n.places || []).forEach(function (p) {
-      var spot = h('div', 'spot');
-      spot.appendChild(imgEl('ic', iconUrl(p.category), p.category));
-      spot.appendChild(h('div', 'nm', p.place_name));
-      deck.appendChild(spot);
+    c.appendChild(headline(['이달, 우리의 새로운 추억 장소는 총 ' + (d.total || 0) + '개']));
+    var cards = (d.places || []).slice(0, 4);
+    var qcls = cards.length <= 2 ? 'q2' : (cards.length === 3 ? 'q3' : 'q4');
+    var stack = h('div', 'newspot-stack ' + qcls);
+    cards.forEach(function (p) {
+      var card = h('div', 'newspot-card');
+      var icon = h('div', 'newspot-icon');
+      icon.appendChild(imgEl('newspot-icon-img', iconUrl(p.category), p.place_name));
+      card.appendChild(icon);
+      card.appendChild(h('div', 'newspot-name', p.place_name));
+      stack.appendChild(card);
     });
-    c.appendChild(deck);
-    if (n.overflow > 0) c.appendChild(h('div', 'overflow', '외 ' + n.overflow + '곳'));
+    c.appendChild(stack);
+    if (d.overflow > 0) c.appendChild(h('div', 'newspot-overflow', '그 외 ' + d.overflow + '곳이 더 추가됐어요'));
     return c;
   }
 
-  function pageLastmonth(l) {
+  function pageLastmonth(d) {
     var c = h('div', 'content lastmonth');
-    var diff = (l.this_count || 0) - (l.last_count || 0);
-    c.appendChild(headline(['지난달보다 ', span(Math.abs(diff) + '번'), diff >= 0 ? ' 더 만났어요' : ' 만났어요']));
-    var max = Math.max(l.this_count || 0, l.last_count || 0, 1);
+    var head;
+    if (d.this_count > d.last_count) head = '지난달보다 추억을 많이 남겼어요';
+    else if (d.this_count < d.last_count) head = '지난달보다 추억을 조금 남겼어요';
+    else head = '지난달만큼 추억을 남겼어요';
+    c.appendChild(headline([head]));
+    var thisLbl = '', lastLbl = '';
+    if (d.year && d.month) {
+      thisLbl = d.year + '. ' + d.month;
+      var py = d.year, pm = d.month - 1;
+      if (pm < 1) { pm = 12; py -= 1; }
+      lastLbl = py + '. ' + pm;
+    }
+    var max = Math.max(d.this_count, d.last_count) || 1;
     var chart = h('div', 'chart');
-    chart.appendChild(barWrap('지난달', l.last_count || 0, max, false));
-    chart.appendChild(barWrap('이번달', l.this_count || 0, max, true));
+    chart.appendChild(lmCol(d.last_count, lastLbl, d.last_count === max, max));
+    chart.appendChild(lmCol(d.this_count, thisLbl, d.this_count === max, max));
     c.appendChild(chart);
     return c;
   }
-  function barWrap(lbl, cnt, max, isThis) {
-    var w = h('div', 'bar-wrap');
-    w.appendChild(h('div', 'cnt', cnt));
-    var bar = h('div', 'bar' + (isThis ? ' this' : ''));
+  function lmCol(cnt, lbl, win, max) {
+    var col = h('div', 'col');
+    col.appendChild(h('div', 'cnt ' + (win ? 'win' : 'lose'), cnt + '개'));
+    var bar = h('div', 'bar ' + (win ? 'win' : 'lose'));
     bar.style.height = Math.round((cnt / max) * 200) + 'px';
-    w.appendChild(bar);
-    w.appendChild(h('div', 'lbl', lbl));
-    return w;
+    col.appendChild(bar);
+    if (lbl) col.appendChild(h('div', 'lbl', lbl));
+    return col;
   }
 
-  function pageRevisit(r) {
+  function pageRevisit(d) {
     var c = h('div', 'content revisit');
-    c.appendChild(headline(['다시 찾은 ', span(r.place_name)]));
-    var frames = h('div', 'frames');
-    frames.appendChild(revisitFrame('past', r.past, r.place_name));
-    frames.appendChild(revisitFrame('current', r.current, r.place_name));
-    c.appendChild(frames);
+    c.appendChild(headline([(d.place_name || '') + '에서 한번 더 추억을 쌓았어요']));
+    var photos = h('div', 'photos');
+    var past = h('div', 'polaroid polaroid--past');
+    past.appendChild(photoOrFallback('photo', (d.past || {}).photo_url, d.place_name));
+    past.appendChild(h('div', 'caption', ((d.past || {}).date || '') + ' 우리'));
+    photos.appendChild(past);
+    var cur = h('div', 'polaroid polaroid--current');
+    cur.appendChild(photoOrFallback('photo', (d.current || {}).photo_url, d.place_name));
+    cur.appendChild(h('div', 'caption caption--accent', ((d.current || {}).date || '') + ' 우리'));
+    photos.appendChild(cur);
+    c.appendChild(photos);
     return c;
-  }
-  function revisitFrame(kind, side, name) {
-    side = side || {};
-    var f = h('div', 'frame ' + kind);
-    f.appendChild(photoOrFallback('photo', side.photo_url, name));
-    f.appendChild(h('div', 'cap', side.date || ''));
-    return f;
   }
 
   function pageMainspot(arr) {
     var c = h('div', 'content mainspot');
-    c.appendChild(headline(['우리가 가장 많이 찾은 곳']));
-    var list = h('div', 'list');
+    c.appendChild(headline(['이달에 우리가 주로 추억을 남긴 곳은']));
+    var list = h('div', 'rows');
     arr.forEach(function (m, i) {
       var row = h('div', 'row' + (i >= 3 ? ' small' : ''));
-      row.appendChild(imgEl('ic', iconUrl(m.category), m.category));
-      row.appendChild(h('div', 'nm', categoryLabel(m.category)));
-      row.appendChild(h('div', 'ct', m.count + '회'));
+      var left = h('div', 'row-left');
+      left.appendChild(imgEl('row-icon', iconUrl(m.category), categoryLabel(m.category)));
+      left.appendChild(h('span', 'row-name', categoryLabel(m.category)));
+      row.appendChild(left);
+      row.appendChild(h('span', 'row-count', m.count + '번'));
       list.appendChild(row);
     });
     c.appendChild(list);
     return c;
   }
 
-  function pageMostlong(m) {
+  function pageMostlong(d) {
+    var nick = (data.meta && data.meta.partner_nickname) || '상대방';
     var c = h('div', 'content mostlong');
-    c.appendChild(headline(['가장 긴 답을 남긴 추억문답']));
+    c.appendChild(headline(['이달에 ' + nick + '님이 가장 길게 답변한 추억은']));
+    var meta = d.place_name ? (d.place_name + ' · ' + (d.date || '')) : (d.date || '');
     var stack = h('div', 'stack');
-    var card = h('div', 'card');
-    card.appendChild(h('div', 'q', m.question_text));
-    card.appendChild(h('div', 'd', (m.place_name ? m.place_name + ' · ' : '') + (m.date || '')));
-    card.appendChild(h('div', 'a', m.answer));
-    stack.appendChild(card);
+    stack.appendChild(mlCard(d, meta, 'card--dummy', true));
+    stack.appendChild(mlCard(d, meta, 'card--main', false));
     c.appendChild(stack);
     return c;
   }
+  function mlCard(d, meta, cls, hidden) {
+    var card = h('div', 'card ' + cls);
+    if (hidden) card.setAttribute('aria-hidden', 'true');
+    var q = h('div', 'q-block');
+    q.appendChild(h('div', 'q', d.question_text));
+    q.appendChild(h('div', 'meta', meta));
+    card.appendChild(q);
+    card.appendChild(h('div', 'divider'));
+    var aWrap = h('div', 'a-wrap');
+    aWrap.appendChild(h('div', 'a', d.answer));
+    card.appendChild(aWrap);
+    return card;
+  }
 
-  function pageFirst(f) {
+  function pageFirst(d) {
     var c = h('div', 'content first anim');
-    c.appendChild(headline(['이번 달 첫 추억']));
-    var card = h('div', 'card');
-    card.appendChild(photoOrFallback('photo', f.photo_url, f.place_name));
-    card.appendChild(h('div', 'nm', f.place_name));
-    card.appendChild(h('div', 'd', f.date || ''));
-    var go = h('button', 'go', '추억 보러가기');
-    go.addEventListener('click', function () { sendNative('OpenRecord:' + (f.record_id || '')); });
+    c.appendChild(headline(['이달에 우리가 처음 쌓은 추억은']));
+    var card = h('div', 'first-card');
+    card.appendChild(photoOrFallback('photo', d.photo_url, d.place_name));
+    var info = h('div', 'first-info');
+    info.appendChild(h('div', 'first-name', d.place_name));
+    info.appendChild(h('div', 'first-date', d.date || ''));
+    card.appendChild(info);
+    var go = h('button', 'first-go', '보러가기');
+    go.addEventListener('click', function () { sendNative('OpenRecord:' + (d.record_id || '')); });
     card.appendChild(go);
     c.appendChild(card);
     return c;
@@ -174,12 +203,12 @@
 
   function pageOutro() {
     var c = h('div', 'content textonly anim');
-    c.appendChild(headline(['다음 달엔', span(' 어떤 추억'), '이 기다리고 있을까요?']));
+    c.appendChild(headline(['다음 달에 더 풍부한 리포트로 찾아올게요']));
     return c;
   }
   function pageClosing() {
     var c = h('div', 'content textonly anim');
-    c.appendChild(headline(['우리의 이야기는', span(' 계속됩니다')]));
+    c.appendChild(headline(['이달에도 예쁜 사랑 하세요!']));
     return c;
   }
 
@@ -205,7 +234,11 @@
   pages.push({ cls: 'cover', node: pageCover() });
   if (data.brief) pages.push({ node: pageBrief(data.brief) });
   if (data.newspot && (data.newspot.total || 0) > 0) pages.push({ node: pageNewspot(data.newspot) });
-  if (data.lastmonth) pages.push({ node: pageLastmonth(data.lastmonth) });
+  if (data.lastmonth) {
+    var lm = {}; for (var lk in data.lastmonth) lm[lk] = data.lastmonth[lk];
+    lm.year = cfg.year; lm.month = cfg.month;
+    pages.push({ node: pageLastmonth(lm) });
+  }
   (data.revisit || []).forEach(function (r) { pages.push({ node: pageRevisit(r) }); });
   if (data.mainspot && data.mainspot.length) pages.push({ node: pageMainspot(data.mainspot) });
   if (data.mostlong) pages.push({ node: pageMostlong(data.mostlong) });
