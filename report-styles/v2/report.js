@@ -322,7 +322,9 @@
   appbar.appendChild(closeBtn);
 
   pages.forEach(function (p, i) {
-    var slide = h('div', 'slide' + (p.cls ? ' ' + p.cls : '') + (p.moment ? ' moment' : ''));
+    // 콘텐츠의 두번째 클래스(=페이지 타입)를 슬라이드에 부여 → 슬라이드별 정밀 배치(s-mainspot 등)
+    var ptype = ((p.node && p.node.className) || '').split(' ')[1] || '';
+    var slide = h('div', 'slide' + (p.cls ? ' ' + p.cls : '') + (p.moment ? ' moment' : '') + (ptype ? ' s-' + ptype : ''));
     // 프로그레스 (커버 제외)
     if (!p.cls) {
       var prog = h('div', 'progress');
