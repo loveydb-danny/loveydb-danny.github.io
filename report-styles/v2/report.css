@@ -1,87 +1,249 @@
-/* report.css — Milestone A skeleton
- * Re:sum Monthly Report WebView
- * Hosted: https://loveydb-danny.github.io/report-styles/report.css
- *
- * Milestone A: minimal reset + container/title/message layout only.
- * Full 9-page design will be applied in Milestone B (Figma-based).
- *
+/* ============================================================
+ * 월간 리포트 웹뷰 — report.css (v2, 개발 경로)
+ * 동결단위 data.json, 표현은 이 파일(서버 수정 가능, 심사 0).
  * SECURITY NOTE: No couple data, tokens, or sensitive values in this file.
- * This file is publicly accessible via GitHub Pages.
- */
+ * 1차 골격 — 페이지별 세부는 Figma 실측으로 점진 정밀화.
+ * ============================================================ */
 
-/* ── Reset ── */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* ---- Pretendard (추후 v2 self-host로 교체) ---- */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css");
+
+/* ---- 토큰 (app_colors.dart 기준) ---- */
+:root {
+  --pink200: #F4B8C7;
+  --pink500: #ED5276;
+  --white:   #FFFFFF;
+  --gray50:  #F4F5F7;
+  --gray150: #E5E9EE;
+  --gray200: #E0E3E7;
+  --gray500: #858F9A;
+  --gray800: #28282F;
+  --gray900: #1A1A1D;
+
+  --pad-h: 24px;                 /* 화면 좌우 기본 패딩 */
+  --font: "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-html, body {
-  width: 100%;
-  height: 100%;
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  -webkit-text-size-adjust: 100%;
+/* ---- reset ---- */
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  font-family: var(--font);
+  color: var(--gray900);
+  background: #fce8ee url("bg_splash.jpg") center / cover no-repeat fixed;
+  overflow: hidden;
+  -webkit-user-select: none; user-select: none;
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── Root container ── */
-.report-root {
-  display: flex;
+/* ============================================================
+ * 앱 셸 / 슬라이드
+ * ============================================================ */
+.report-app { position: fixed; inset: 0; }
+
+.slide {
+  position: absolute; inset: 0;
+  display: none;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 24px 16px;
-  background-color: #ffffff;
-  color: #1a1a1a;
-}
-
-/* ── Title ── */
-.report-title {
-  font-size: 20px;
-  font-weight: 600;
-  line-height: 1.4;
+  justify-content: center;       /* 전체 가로세로 center (Notion) */
+  padding: calc(env(safe-area-inset-top) + 64px) var(--pad-h)
+           calc(env(safe-area-inset-bottom) + 32px);
   text-align: center;
-  margin-bottom: 12px;
-  color: #1a1a1a;
+}
+.slide.active { display: flex; }
+
+/* ---- 앱바: X 닫기 (모든 슬라이드 상단 좌측) ---- */
+.appbar {
+  position: absolute; top: calc(env(safe-area-inset-top) + 8px); left: 8px;
+  z-index: 30;
+}
+.appbar .close {
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: 0; cursor: pointer;
+}
+.appbar .close svg { width: 24px; height: 24px; stroke: var(--gray900); stroke-width: 2; }
+
+/* ---- 프로그레스바 (디테일 슬라이드 상단) ---- */
+.progress {
+  position: absolute; top: calc(env(safe-area-inset-top) + 18px);
+  left: var(--pad-h); right: var(--pad-h);
+  display: flex; gap: 4px; z-index: 20;
+}
+.progress .seg {
+  flex: 1; height: 3px; border-radius: 2px;
+  background: var(--gray800); opacity: 0.2;
+  transition: opacity .2s;
+}
+.progress .seg.on { opacity: 1; }
+.slide.cover .progress { display: none; }     /* 커버엔 프로그레스 없음 */
+
+/* ---- 탭 영역 (좌 0~35% 이전 / 우 65~100% 다음 / 중앙 무동작) ---- */
+.tapzone { position: absolute; top: 0; bottom: 0; z-index: 10; }
+.tapzone.prev { left: 0; width: 35%; }
+.tapzone.next { right: 0; width: 35%; }
+
+/* 콘텐츠는 탭존 위로 */
+.slide > .content { position: relative; z-index: 15; width: 100%; max-width: 420px; }
+
+/* ============================================================
+ * 공통 타이포
+ * ============================================================ */
+.headline {
+  font-size: 22px; font-weight: 700; line-height: 1.35;
+  color: var(--gray900); margin-bottom: 28px;
+  word-break: keep-all;
+}
+.headline .accent { color: var(--pink500); }
+.sub { font-size: 15px; color: var(--gray500); }
+
+/* 진입 애니메이션 (first DataSlot / outro / closing) */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(40px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.slide.active .anim { animation: rise .8s ease-out both; }
+
+/* ============================================================
+ * 커버 (ReportMain)
+ * ============================================================ */
+.cover .cover-wrap { display: contents; }
+.cover .logo { width: 80px; height: 20px; margin: 0 auto 12px; display: block; }
+.cover .title { font-size: 22px; font-weight: 700; }
+.cover .wallpaper {
+  margin: 36px auto 0; max-width: 280px;
+  border-radius: 20px; background: var(--white); padding: 16px 10px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent 96%);
+          mask-image: linear-gradient(to bottom, #000 45%, transparent 96%);
+}
+.cover .wallpaper img { width: 100%; display: block; }
+.cover .cta {
+  position: absolute; left: var(--pad-h); right: var(--pad-h);
+  bottom: calc(env(safe-area-inset-bottom) + 24px);
+  height: 52px; border-radius: 8px; border: 0;
+  background: var(--gray900); color: var(--white);
+  font-family: var(--font); font-size: 16px; font-weight: 600;
+  z-index: 15; cursor: pointer;
 }
 
-/* ── Subtitle / period label ── */
-.report-subtitle {
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 1.5;
+/* ============================================================
+ * brief — 기록한 추억 N개 / 사진 N장
+ * ============================================================ */
+.brief .cards { display: flex; flex-direction: column; gap: 16px; align-items: center; }
+.brief .card {
+  width: 200px; background: var(--white); border-radius: 16px;
+  padding: 28px 20px; box-shadow: 0 8px 24px rgba(0,0,0,.06);
+}
+.brief .card .label { font-size: 14px; color: var(--gray500); margin-bottom: 6px; }
+.brief .card .num { font-size: 28px; font-weight: 700; }
+
+/* ============================================================
+ * newspot — 새 장소 카드 (회전·겹침)
+ * ============================================================ */
+.newspot .deck { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 8px; }
+.newspot .spot {
+  width: 150px; background: var(--white); border-radius: 16px;
+  padding: 20px 12px; box-shadow: 0 8px 24px rgba(237,82,118,.18);
   text-align: center;
-  color: #888888;
-  margin-bottom: 32px;
+}
+.newspot .spot .ic {
+  width: 48px; height: 48px; border-radius: 50%;
+  margin: 0 auto 10px; display: block; background: var(--gray50);
+}
+.newspot .spot .nm { font-size: 13px; color: var(--gray800); word-break: keep-all; }
+.newspot .overflow { margin-top: 16px; font-size: 14px; color: var(--gray500); }
+
+/* ============================================================
+ * lastmonth — 막대 그래프 (max 200px)
+ * ============================================================ */
+.lastmonth .chart {
+  display: flex; align-items: flex-end; justify-content: center; gap: 40px;
+  height: 240px;
+}
+.lastmonth .bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.lastmonth .cnt { font-size: 14px; font-weight: 600; }
+.lastmonth .bar {
+  width: 64px; border-radius: 12px;
+  background: var(--gray200);
+}
+.lastmonth .bar.this { background: linear-gradient(180deg, #F4B8C7, #ED5276); }
+.lastmonth .lbl { font-size: 13px; color: var(--gray500); }
+
+/* ============================================================
+ * revisit — 폴라로이드 2장 (과거↔당월)
+ * ============================================================ */
+.revisit .frames { position: relative; height: 380px; margin-top: 8px; }
+.revisit .frame {
+  position: absolute; width: 200px; background: var(--white);
+  border-radius: 12px; padding: 10px 10px 14px; box-shadow: 0 10px 30px rgba(0,0,0,.12);
+}
+.revisit .frame.past    { left: 8%;  top: 90px; transform: rotate(-7deg); }
+.revisit .frame.current { right: 8%; top: 20px; transform: rotate(5deg); }
+.revisit .photo {
+  width: 100%; aspect-ratio: 1/1; border-radius: 6px; object-fit: cover;
+  background: var(--gray150); display: block;
+}
+.revisit .cap { margin-top: 8px; font-size: 12px; color: var(--gray500); }
+.revisit .frame.current .cap { color: var(--pink500); }
+
+/* 사진 없음 폴백: pink200 + 사선 장소명 타일 (MemoryEmptyDetailPhoto) */
+.nophoto {
+  width: 100%; aspect-ratio: 1/1; border-radius: 6px; overflow: hidden;
+  background: var(--pink200); position: relative;
+}
+.nophoto .tile {
+  position: absolute; top: -30%; left: -30%; width: 160%; height: 160%;
+  transform: rotate(-30deg);
+  display: flex; flex-wrap: wrap; gap: 16px; align-content: center; justify-content: center;
+  opacity: .55;
+}
+.nophoto .tile span { font-size: 13px; color: var(--white); font-weight: 600; white-space: nowrap; }
+
+/* ============================================================
+ * mainspot — 카테고리 TOP5 (1~3위 80 / 4~5위 68)
+ * ============================================================ */
+.mainspot .list { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.mainspot .row {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--white); border-radius: 16px; padding: 0 16px;
+  height: 80px; box-shadow: 0 6px 18px rgba(0,0,0,.05);
+}
+.mainspot .row.small { height: 68px; }
+.mainspot .row .ic { width: 40px; height: 40px; border-radius: 50%; flex: none; background: var(--gray50); }
+.mainspot .row .nm { flex: 1; text-align: left; font-size: 15px; font-weight: 600; }
+.mainspot .row .ct { font-size: 14px; color: var(--gray500); }
+
+/* ============================================================
+ * mostlong — 질문/답변 (길면 스크롤)
+ * ============================================================ */
+.mostlong .stack { position: relative; width: 100%; }
+.mostlong .card {
+  position: relative; background: var(--white); border-radius: 16px;
+  padding: 24px 20px; box-shadow: 0 8px 24px rgba(0,0,0,.06);
+  max-height: 360px; overflow-y: auto; text-align: left;
+}
+.mostlong .q { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.mostlong .d { font-size: 12px; color: var(--gray500); margin-bottom: 14px; }
+.mostlong .a { font-size: 15px; line-height: 1.6; color: var(--gray800); white-space: pre-wrap; }
+
+/* ============================================================
+ * first — 첫 방문 추억 (사진 + 보러가기)
+ * ============================================================ */
+.first .card {
+  width: 240px; margin: 0 auto; background: var(--white);
+  border-radius: 16px; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.1);
+}
+.first .photo, .first .nophoto { width: 100%; aspect-ratio: 1/1; border-radius: 10px; object-fit: cover; display: block; }
+.first .nm { margin-top: 12px; font-size: 16px; font-weight: 700; }
+.first .d  { font-size: 13px; color: var(--gray500); margin-top: 2px; }
+.first .go {
+  margin-top: 14px; height: 40px; width: 100%; border: 0; border-radius: 8px;
+  background: var(--gray50); color: var(--pink500); font-family: var(--font);
+  font-size: 14px; font-weight: 600; cursor: pointer; z-index: 16; position: relative;
 }
 
-/* ── Placeholder message (Milestone A) ── */
-.report-message {
-  font-size: 15px;
-  font-weight: 400;
-  line-height: 1.6;
-  text-align: center;
-  color: #555555;
-}
-
-/* ── Photo placeholder (Milestone A: hidden; Milestone B: visible) ── */
-.report-photo {
-  display: block;
-  max-width: 100%;
-  height: auto;
-  border-radius: 8px;
-}
-
-.report-photo[src=""] {
-  display: none;
-}
-
-/* ── Loading indicator for photos ── */
-.report-photo-loading {
-  display: inline-block;
-  width: 100%;
-  height: 160px;
-  background-color: #f0f0f0;
-  border-radius: 8px;
-}
+/* ============================================================
+ * outro / closing — 텍스트만 (rise 애니)
+ * ============================================================ */
+.textonly .headline { margin-bottom: 0; }
