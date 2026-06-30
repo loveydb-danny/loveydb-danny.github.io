@@ -302,11 +302,11 @@
   if (data.mainspot && data.mainspot.length) pages.push({ node: pageMainspot(data.mainspot) });
   if (data.mostlong) pages.push({ node: pageMostlong(data.mostlong) });
   if (data.first) {
-    pages.push({ node: pageFirstIntro() });
-    pages.push({ node: pageFirst(data.first) });
+    pages.push({ node: pageFirstIntro(), moment: true });
+    pages.push({ node: pageFirst(data.first), moment: true });
   }
-  pages.push({ node: pageOutro() });
-  pages.push({ node: pageClosing() });
+  pages.push({ node: pageOutro(), moment: true });
+  pages.push({ node: pageClosing(), moment: true });
 
   // 디테일(커버 제외) 개수 → 프로그레스 세그먼트
   var detailCount = pages.length - 1;
@@ -322,7 +322,7 @@
   appbar.appendChild(closeBtn);
 
   pages.forEach(function (p, i) {
-    var slide = h('div', 'slide' + (p.cls ? ' ' + p.cls : ''));
+    var slide = h('div', 'slide' + (p.cls ? ' ' + p.cls : '') + (p.moment ? ' moment' : ''));
     // 프로그레스 (커버 제외)
     if (!p.cls) {
       var prog = h('div', 'progress');

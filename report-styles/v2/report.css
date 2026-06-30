@@ -78,6 +78,13 @@ body {
 }
 .slide.active { display: flex; }
 
+/* 디테일 데이터 페이지(brief~mostlong): 프로그레스바 아래 56px 고정 상단정렬.
+   progress 하단 = safe-top+63 → +56 = safe-top+119. cover·moment(first/outro/closing)는 중앙정렬 유지. */
+.slide:not(.cover):not(.moment) {
+  justify-content: flex-start;
+  padding-top: calc(env(safe-area-inset-top) + 119px);
+}
+
 /* ---- 앱바: X 닫기 (모든 슬라이드 상단 좌측) ---- */
 .appbar {
   position: absolute; top: calc(env(safe-area-inset-top) + 8px); left: 8px;
