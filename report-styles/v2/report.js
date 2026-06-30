@@ -62,14 +62,39 @@
     wrap.appendChild(hb);
     // wallpaper: 캘린더 캡처(B-1 앱 업로드 URL). 없으면 빈 흰 컨테이너.
     var wp = h('div', 'wallpaper');
-    var wpUrl = data.wallpaper_url || m.wallpaper_url;
-    if (wpUrl) wp.appendChild(imgEl('cal', wpUrl, '캘린더'));
+    buildCalendar(wp, m.year, m.month, data.calendar || []);
     wrap.appendChild(wp);
     // CTA: `0000년 0월 추억 보기`
     var btn = h('button', 'cta', m.year + '년 ' + m.month + '월 추억 보기');
     btn.addEventListener('click', function () { next(); });
     wrap.appendChild(btn);
     return wrap;
+  }
+
+  // 커버 wallpaper = 해당 월 달력 그리드 (요일 헤더 없음, 캘린더탭과 동일 규칙)
+  //   날짜칸: 그 날 대표 사진(photo_url) → 없으면 카테고리 아이콘 → 기록 없으면 날짜숫자
+  //   data.calendar = [{ day, photo_url|null, category|null }] (EF가 매 서빙 photo_url 주입)
+  function buildCalendar(wp, year, month, cal) {
+    if (!year || !month) return;
+    var byDay = {};
+    cal.forEach(function (c) { byDay[c.day] = c; });
+    var firstW = new Date(year, month - 1, 1).getDay();   // 0=일요일
+    var days   = new Date(year, month, 0).getDate();       // 말일
+    var grid = h('div', 'cal-grid');
+    for (var b = 0; b < firstW; b++) grid.appendChild(h('div', 'cal-cell empty'));
+    for (var d = 1; d <= days; d++) {
+      var cell = h('div', 'cal-cell');
+      var info = byDay[d];
+      if (info && info.photo_url) {
+        cell.appendChild(imgEl('thumb', info.photo_url, ''));
+      } else if (info && info.category) {
+        cell.appendChild(imgEl('cat', iconUrl(info.category), info.category));
+      } else {
+        cell.appendChild(h('span', 'd', d));
+      }
+      grid.appendChild(cell);
+    }
+    wp.appendChild(grid);
   }
 
   function pageBrief(d) {

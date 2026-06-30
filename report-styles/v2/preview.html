@@ -13,8 +13,17 @@
   {
     "config": { "icon_base": "icons/2026-06/", "year": 2026, "month": 5 },
     "meta":   { "year": 2026, "month": 5, "partner_nickname": "민지" },
-    "wallpaper_url": "https://picsum.photos/seed/calendar/525/468",
-    "_note": "wallpaper_url은 프리뷰 스탠드인. 실제는 B-1 앱 캡처 캘린더(report-data 계약에 필드 추가 필요)",
+    "calendar": [
+      { "day": 3,  "photo_url": "https://picsum.photos/seed/c3/80",  "category": "cafe_dessert" },
+      { "day": 4,  "photo_url": null, "category": "park" },
+      { "day": 12, "photo_url": "https://picsum.photos/seed/c12/80", "category": "restaurant" },
+      { "day": 15, "photo_url": "https://picsum.photos/seed/c15/80", "category": "nature" },
+      { "day": 18, "photo_url": "https://picsum.photos/seed/c18/80", "category": "cafe_dessert" },
+      { "day": 20, "photo_url": null, "category": "bar" },
+      { "day": 21, "photo_url": "https://picsum.photos/seed/c21/80", "category": "culture" },
+      { "day": 25, "photo_url": "https://picsum.photos/seed/c25/80", "category": "restaurant" }
+    ],
+    "_note": "calendar는 프리뷰 스탠드인(사진=picsum). 실제는 RPC 집계+EF signed URL(B-1).",
     "brief":  { "record_count": 8, "photo_count": 15 },
     "newspot": {
       "total": 6,
