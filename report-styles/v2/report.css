@@ -90,7 +90,7 @@ body {
 /* mainspot ReportDataSlot: 컨테이너 = 헤드라인 바로 아래(gap0) ~ ios 인디케이터+56.
    좌우 0(컨테이너가 47/48 자체 패딩)·하단 safe+56. 컨테이너 내부 패딩(18/47/48/70) 제외 영역에 카드 중앙정렬. */
 .slide.s-mainspot { padding-left: 0; padding-right: 0; padding-bottom: calc(env(safe-area-inset-bottom) + 56px); }
-.content.mainspot { gap: 0; }
+.slide > .content.mainspot { gap: 0; }   /* .slide > .content(gap32)보다 특이도 높여 덮어쓰기 */
 
 /* ---- 앱바: X 닫기 (모든 슬라이드 상단 좌측) ---- */
 .appbar {
