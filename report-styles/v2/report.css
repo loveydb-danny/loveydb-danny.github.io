@@ -77,9 +77,10 @@ body {
 }
 .appbar .close svg { width: 24px; height: 24px; stroke: var(--gray900); stroke-width: 2; }
 
-/* ---- 프로그레스바 (디테일 슬라이드 상단) ---- */
+/* ---- 프로그레스바 (디테일 슬라이드 상단) ----
+ * 닫기(X) 버튼(앱바 top+8, 44px) 아래에 위치 (Figma ReportDetail). */
 .progress {
-  position: absolute; top: calc(env(safe-area-inset-top) + 18px);
+  position: absolute; top: calc(env(safe-area-inset-top) + 60px);
   left: var(--pad-h); right: var(--pad-h);
   display: flex; gap: 4px; z-index: 20;
 }
