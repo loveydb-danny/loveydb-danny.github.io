@@ -42,14 +42,22 @@
 
   // ---------- page builders ----------
   function pageCover() {
-    var c = h('div', 'content');
-    var logo = imgEl('logo', 'logo.svg', 'Re:sum'); c.appendChild(logo);
-    var m = (data.meta || {});
-    c.appendChild(h('div', 'title', m.month + '월, 우리의 한 달'));
-    // 월페이퍼 (당월 대표 사진 — 1차 골격: brief 없으면 생략)
-    var btn = h('button', 'cta', '우리의 리포트 보기');
+    var m = data.meta || {};
+    var wrap = h('div', 'cover-wrap');
+    // headline: 흰 로고 + title `0000년 0월의 우리`
+    var hb = h('div', 'headline-block');
+    hb.appendChild(imgEl('logo', 'logo.svg', 'Re:sum'));
+    hb.appendChild(h('div', 'title', m.year + '년 ' + m.month + '월의 우리'));
+    wrap.appendChild(hb);
+    // wallpaper: 캘린더 캡처(B-1 앱 업로드 URL). 없으면 빈 흰 컨테이너.
+    var wp = h('div', 'wallpaper');
+    var wpUrl = data.wallpaper_url || m.wallpaper_url;
+    if (wpUrl) wp.appendChild(imgEl('cal', wpUrl, '캘린더'));
+    wrap.appendChild(wp);
+    // CTA: `0000년 0월 추억 보기`
+    var btn = h('button', 'cta', m.year + '년 ' + m.month + '월 추억 보기');
     btn.addEventListener('click', function () { next(); });
-    var wrap = h('div', 'cover-wrap'); wrap.appendChild(c); wrap.appendChild(btn);
+    wrap.appendChild(btn);
     return wrap;
   }
 

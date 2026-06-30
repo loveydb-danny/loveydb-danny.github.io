@@ -30,11 +30,17 @@ html, body { height: 100%; }
 body {
   font-family: var(--font);
   color: var(--gray900);
-  background: #fce8ee url("bg_splash.jpg") center / cover no-repeat fixed;
+  background: #fce8ee;
   overflow: hidden;
   -webkit-user-select: none; user-select: none;
   -webkit-font-smoothing: antialiased;
 }
+
+/* ---- BG 정책 (ReportMain·ReportDetail 공통) ----
+ * 그라데이션 PNG(1:1.78)를 풀스크린 cover+center, 노치 뒤까지 풀블리드.
+ * 슬라이드는 position:absolute inset:0 이므로 BG가 안전영역 바깥까지 채움. */
+.slide { background: #fce8ee url("bg_detail.jpg") center / cover no-repeat; }
+.slide.cover { background-image: url("bg_splash.jpg"); }
 
 /* ============================================================
  * 앱 셸 / 슬라이드
@@ -106,24 +112,45 @@ body {
 .slide.active .anim { animation: rise .8s ease-out both; }
 
 /* ============================================================
- * 커버 (ReportMain)
+ * 커버 (ReportMain) — 상단 정렬 (Figma 4678:946280 실측)
+ *   headline top 176 / wallpaper top 288 / 버튼 하단
  * ============================================================ */
+.slide.cover {
+  justify-content: flex-start;
+  /* status bar(44)+appbar(52)=96, headline top 176 → appbar 아래 80px.
+     safe-top이 status bar(44)를 대체하므로 +132 */
+  padding-top: calc(env(safe-area-inset-top) + 132px);
+}
 .cover .cover-wrap { display: contents; }
-.cover .logo { width: 80px; height: 20px; margin: 0 auto 12px; display: block; }
-.cover .title { font-size: 22px; font-weight: 700; }
+
+.cover .headline-block { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.cover .logo { width: 80px; height: 20px; display: block; }
+.cover .title {
+  font-size: 28px; font-weight: 700; line-height: 34px;
+  color: var(--white); text-shadow: 0 0 10px #D3494F;
+}
+
+/* wallpaper: 흰 컨테이너 280×270 radius20 + 하단 마스크 페이드 */
 .cover .wallpaper {
-  margin: 36px auto 0; max-width: 280px;
-  border-radius: 20px; background: var(--white); padding: 16px 10px;
+  position: relative; margin-top: 48px;
+  width: 280px; height: 270px;
+  background: var(--white); border-radius: 20px;
   -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent 96%);
           mask-image: linear-gradient(to bottom, #000 45%, transparent 96%);
 }
-.cover .wallpaper img { width: 100%; display: block; }
+.cover .wallpaper .cal {       /* 캘린더 캡처(날짜부분) ×0.7, 좌우9·상16 인셋 */
+  position: absolute; top: 16px; left: 9px;
+  width: 262.5px; height: 234.15px; object-fit: cover; display: block;
+  border-radius: 6px;
+}
+
 .cover .cta {
-  position: absolute; left: var(--pad-h); right: var(--pad-h);
-  bottom: calc(env(safe-area-inset-bottom) + 24px);
+  position: absolute; left: 16px; right: 16px;
+  bottom: calc(env(safe-area-inset-bottom) + 10px);
   height: 52px; border-radius: 8px; border: 0;
   background: var(--gray900); color: var(--white);
-  font-family: var(--font); font-size: 16px; font-weight: 600;
+  font-family: var(--font); font-size: 16px; font-weight: 600; line-height: 22px;
+  box-shadow: 0 0 10px rgba(255,255,255,.9);
   z-index: 15; cursor: pointer;
 }
 
