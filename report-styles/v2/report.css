@@ -120,9 +120,11 @@ body {
 /* ============================================================
  * 공통 타이포
  * ============================================================ */
-.headline {              /* Figma 실측: Head/24 + 그라데이션 위 흰 글로우 (3개 페이지 합의) */
+.headline {              /* Figma: Head/24 + 흰 글로우. 박스 minH92 / padding 10·48 / center */
+  box-sizing: border-box; min-height: 92px; padding: 10px 48px;
+  display: flex; align-items: center; justify-content: center;
   font-size: 24px; font-weight: 700; line-height: 32px;
-  color: var(--gray800); margin-bottom: 28px;
+  color: var(--gray800);
   word-break: keep-all; white-space: pre-line;   /* \n 줄바꿈 */
   text-shadow: 0 0 8px var(--white);
 }

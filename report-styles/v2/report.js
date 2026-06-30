@@ -35,6 +35,8 @@
     return n;
   }
   function iconUrl(dbValue) { return (cfg.icon_base || '') + (dbValue || 'etc') + '.svg'; }
+  // 글리프(원형 배경 없는 카테고리 아이콘) — mainspot 전용
+  function glyphUrl(dbValue) { return (cfg.icon_base || '') + 'glyph/' + (dbValue || 'etc') + '.svg'; }
   function imgEl(cls, url, alt) {
     var i = h('img', cls); i.src = url; i.alt = alt || ''; i.loading = 'eager';
     return i;
@@ -186,7 +188,7 @@
     arr.forEach(function (m) {
       var row = h('div', 'row' + (tall ? ' tall' : ''));
       var left = h('div', 'row-left');
-      left.appendChild(imgEl('row-icon', iconUrl(m.category), categoryLabel(m.category)));
+      left.appendChild(imgEl('row-icon', glyphUrl(m.category), categoryLabel(m.category)));
       left.appendChild(h('span', 'row-name', categoryLabel(m.category)));
       row.appendChild(left);
       row.appendChild(h('span', 'row-count', m.count + '번'));
@@ -221,9 +223,14 @@
     return card;
   }
 
+  // first = 2페이지: ① 인트로 텍스트만 → ② 추억 카드만 (Figma 분리)
+  function pageFirstIntro() {
+    var c = h('div', 'content textonly anim');
+    c.appendChild(headline('이달에 우리가\n처음 쌓은 추억을\n한번 떠올려보세요'));
+    return c;
+  }
   function pageFirst(d) {
     var c = h('div', 'content first anim');
-    c.appendChild(headline('이달에 우리가\n처음 쌓은 추억을\n한번 떠올려보세요'));
     var card = h('div', 'first-card');
     // 대표 사진 2장(R-004 완성 페이지 동일). RPC는 1장 → 앞·뒤 동일 사진 2번. 없으면 폴백.
     var frame = h('div', 'pp-frame');
@@ -294,7 +301,10 @@
   (data.revisit || []).forEach(function (r) { pages.push({ node: pageRevisit(r) }); });
   if (data.mainspot && data.mainspot.length) pages.push({ node: pageMainspot(data.mainspot) });
   if (data.mostlong) pages.push({ node: pageMostlong(data.mostlong) });
-  if (data.first) pages.push({ node: pageFirst(data.first) });
+  if (data.first) {
+    pages.push({ node: pageFirstIntro() });
+    pages.push({ node: pageFirst(data.first) });
+  }
   pages.push({ node: pageOutro() });
   pages.push({ node: pageClosing() });
 

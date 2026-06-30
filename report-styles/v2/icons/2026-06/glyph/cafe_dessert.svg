@@ -1,0 +1,9 @@
+<svg width="56" height="56" viewBox="14 14 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M36 19H22C20.9 19 20 19.9 20 21V29C20 31.21 21.79 33 24 33H30C32.21 33 34 31.21 34 29V26H36C37.1 26 38 25.1 38 24V21C38 19.9 37.1 19 36 19ZM36 24H34V21H36V24ZM19 37H35C35.55 37 36 36.55 36 36C36 35.45 35.55 35 35 35H19C18.45 35 18 35.45 18 36C18 36.55 18.45 37 19 37Z" fill="url(#cafe_dessert_gradient)"/>
+<defs>
+<radialGradient id="cafe_dessert_gradient" cx="28" cy="28" r="14" gradientUnits="userSpaceOnUse">
+<stop stop-color="#E34F97"/>
+<stop offset="1" stop-color="#F29C9C"/>
+</radialGradient>
+</defs>
+</svg>

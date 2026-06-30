@@ -1,0 +1,9 @@
+<svg width="56" height="56" viewBox="14 14 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M36.45 21.37C36.5104 21.2182 36.5328 21.0539 36.5151 20.8915C36.4973 20.7291 36.4401 20.5735 36.3483 20.4384C36.2566 20.3032 36.1331 20.1925 35.9887 20.1161C35.8443 20.0397 35.6834 19.9998 35.52 20H23V19C23 18.45 22.55 18 22 18C21.45 18 21 18.45 21 19V38H23V30H35.52C36.23 30 36.71 29.29 36.45 28.63L35 25L36.45 21.37ZM31 25C31 26.1 30.1 27 29 27C27.9 27 27 26.1 27 25C27 23.9 27.9 23 29 23C30.1 23 31 23.9 31 25Z" fill="url(#sightseeing_gradient)"/>
+<defs>
+<radialGradient id="sightseeing_gradient" cx="28" cy="28" r="14" gradientUnits="userSpaceOnUse">
+<stop stop-color="#E34F97"/>
+<stop offset="1" stop-color="#F29C9C"/>
+</radialGradient>
+</defs>
+</svg>
