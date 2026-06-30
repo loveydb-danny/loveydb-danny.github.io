@@ -162,7 +162,8 @@ body {
 .cover .cover-wrap { display: contents; }
 
 .cover .headline-block { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.cover .logo { width: 80px; height: 20px; display: block; }
+/* 로고: 벡터 원본(549:172) 비율 보존(왜곡 금지) + 가독성용 CSS 그림자(번짐 최소) */
+.cover .logo { width: 80px; height: auto; display: block; filter: drop-shadow(0 1px 2px rgba(211,73,79,.5)); }
 .cover .title {
   font-size: 28px; font-weight: 700; line-height: 34px;
   color: var(--white); text-shadow: 0 0 10px #D3494F;
