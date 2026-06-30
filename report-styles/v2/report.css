@@ -84,6 +84,8 @@ body {
   justify-content: flex-start;
   padding-top: calc(env(safe-area-inset-top) + 119px);
 }
+/* 콘텐츠가 슬라이드 영역 전체를 채워 ReportDataSlot이 남은 공간 중앙정렬 가능하게 */
+.slide:not(.cover):not(.moment) > .content { flex: 1 1 auto; justify-content: flex-start; }
 
 /* ---- 앱바: X 닫기 (모든 슬라이드 상단 좌측) ---- */
 .appbar {
@@ -314,7 +316,8 @@ body {
 /* ============================================================
  * mainspot — 카테고리 TOP5 (전 행 68px·'번', Figma 실측 4672:942860)
  * ============================================================ */
-.mainspot .rows { display: flex; flex-direction: column; gap: 10px; align-items: stretch; width: 100%; max-width: 340px; }
+/* 카드 개수와 무관하게 ReportDataSlot 남은 공간에서 세로 중앙정렬 */
+.mainspot .rows { display: flex; flex-direction: column; gap: 10px; align-items: stretch; width: 100%; max-width: 340px; flex: 1 1 auto; justify-content: center; }
 .mainspot .row {
   box-sizing: border-box; display: flex; align-items: center; justify-content: space-between;
   width: 100%; height: 68px; padding: 0 20px;
