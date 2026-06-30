@@ -53,6 +53,19 @@ body {
  * ============================================================ */
 .report-app { position: fixed; inset: 0; }
 
+/* ---- 로딩 오버레이 (이미지 프리로드 동안, #1) ---- */
+.report-loader {
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  background: #fce8ee;
+}
+.report-loader .spinner {
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 3px solid rgba(237,82,118,.25); border-top-color: var(--pink500);
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
 .slide {
   position: absolute; inset: 0;
   display: none;
@@ -110,7 +123,7 @@ body {
 .headline {              /* Figma 실측: Head/24 + 그라데이션 위 흰 글로우 (3개 페이지 합의) */
   font-size: 24px; font-weight: 700; line-height: 32px;
   color: var(--gray800); margin-bottom: 28px;
-  word-break: keep-all;
+  word-break: keep-all; white-space: pre-line;   /* \n 줄바꿈 */
   text-shadow: 0 0 8px var(--white);
 }
 .headline .accent { color: var(--pink500); }
@@ -152,15 +165,22 @@ body {
   -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent 96%);
           mask-image: linear-gradient(to bottom, #000 45%, transparent 96%);
 }
-/* 달력 그리드 — 7열(요일 정렬), 헤더 없음 */
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; width: 100%; }
+/* 달력 그리드 — 앱 캘린더탭 동일(요일헤더 없음). 7열, 셀 44:59, 날짜 항상 상단중앙.
+ *   사진날: 사진 cover + 흰색 날짜  /  기록날(사진X): gray50칸+카테고리칩  /  무기록: 흰칸+회색날짜 */
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); column-gap: 4px; row-gap: 6px; width: 100%; }
 .cal-cell {
-  position: relative; aspect-ratio: 1 / 1; overflow: hidden;
-  display: flex; align-items: center; justify-content: center;
+  position: relative; aspect-ratio: 44 / 59; border-radius: 5px; overflow: hidden;
+  background: var(--white);
 }
-.cal-cell .d { font-size: 9px; line-height: 1; color: var(--gray400); }
-.cal-cell .thumb { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 4px; }
-.cal-cell .cat { width: 64%; height: 64%; object-fit: contain; opacity: .85; }
+.cal-cell.empty { background: transparent; }
+.cal-cell.has-rec { background: var(--gray50); border: 1px solid var(--gray150); }
+.cal-cell .cal-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.cal-cell .cal-cat { position: absolute; top: 48%; left: 50%; transform: translate(-50%, -50%); width: 92%; height: auto; }
+.cal-cell .cal-d {
+  position: absolute; top: 3px; left: 0; right: 0; text-align: center; z-index: 2;
+  font-size: 11px; font-weight: 600; line-height: 13px; color: var(--gray600);
+}
+.cal-cell.has-photo .cal-d { color: var(--white); text-shadow: 0 1px 2px rgba(0,0,0,.45); }
 
 .cover .cta {
   position: absolute; left: 16px; right: 16px;
@@ -176,16 +196,17 @@ body {
  * brief — 카드 2장(회전·겹침) (Figma 4678:946292)
  * ============================================================ */
 .brief { gap: 40px; }
-.brief-cards { position: relative; width: 300px; height: 400px; }
+.brief-cards { position: relative; width: 100%; max-width: 320px; height: 360px; }
 .brief-card {
-  position: absolute; display: flex; flex-direction: column;
+  position: absolute; left: 50%; top: 50%; display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 4px;
   width: 180px; height: 188px; box-sizing: border-box;
   background: var(--white); border-radius: 16px;
   box-shadow: 3px 10px 24px 0 var(--report-shadow); text-align: center;
 }
-.brief-card--1 { top: 0; left: 0; transform: rotate(-5.97deg); }
-.brief-card--2 { bottom: 0; right: 0; transform: rotate(11.15deg); }
+/* 아래(우하단) 카드가 맨 앞(z2) — Figma 슬롯중심 기준 오프셋 */
+.brief-card--1 { transform: translate(calc(-50% - 57.21px), calc(-50% - 97.14px)) rotate(-5.97deg); z-index: 1; }
+.brief-card--2 { transform: translate(calc(-50% + 50.13px), calc(-50% + 62.39px)) rotate(11.15deg); z-index: 2; }
 .brief-card-label { font-weight: 700; font-size: 16px; line-height: 22px; color: var(--gray500); }
 .brief-card-value { font-weight: 700; font-size: 28px; line-height: 34px; color: var(--gray800); }
 
@@ -200,27 +221,25 @@ body {
   padding: 24px 20px; background: var(--white); border-radius: 16px;
   box-shadow: 0 0 10px 0 var(--report-shadow); overflow: hidden;
 }
-.newspot-icon {
-  flex: none; width: 56px; height: 56px; border-radius: 200px;
-  background: var(--gray10); border: 1px solid var(--gray100);
-  display: flex; align-items: center; justify-content: center;
-}
-.newspot-icon-img { width: 24px; height: 24px; object-fit: contain; }
+/* 카테고리 아이콘 SVG가 56 원형칩(회색원+테두리+글리프) 자체 → 래퍼 원 없이 직접 56 렌더 */
+.newspot-icon-img { flex: none; width: 56px; height: 56px; object-fit: contain; }
 .newspot-name {
   font-weight: 600; font-size: 14px; line-height: 19px; color: var(--gray600);
   text-shadow: 0 0 8px var(--white);
   white-space: nowrap; max-width: 110px; overflow: hidden; text-overflow: ellipsis;
 }
 .newspot-overflow { font-weight: 600; font-size: 13px; line-height: 17px; color: var(--gray600); }
-.newspot-stack.q2 .newspot-card:nth-child(1){ left:13px;  top:57px;  transform:rotate(-5.3deg); }
-.newspot-stack.q2 .newspot-card:nth-child(2){ left:125px; top:162px; transform:rotate(11.62deg); }
-.newspot-stack.q3 .newspot-card:nth-child(1){ left:23px;  top:19px;  transform:rotate(11.63deg); }
-.newspot-stack.q3 .newspot-card:nth-child(2){ left:125px; top:122px; transform:rotate(-8.06deg); }
-.newspot-stack.q3 .newspot-card:nth-child(3){ left:32px;  top:226px; transform:rotate(2.02deg); }
-.newspot-stack.q4 .newspot-card:nth-child(1){ left:23px;  top:19px;  transform:rotate(11.63deg); }
-.newspot-stack.q4 .newspot-card:nth-child(2){ left:125px; top:82px;  transform:rotate(-8.06deg); }
-.newspot-stack.q4 .newspot-card:nth-child(3){ left:11px;  top:158px; transform:rotate(-3.11deg); }
-.newspot-stack.q4 .newspot-card:nth-child(4){ left:120px; top:218px; transform:rotate(13.19deg); }
+/* 위(top 작은)·앞 카드가 최상위 z. 좌표=292×380 그룹 기준(카드 150×148), Figma 실측 */
+.newspot-stack.q1 .newspot-card:nth-child(1){ left:71px;  top:116px; transform:rotate(0deg);    z-index:1; }
+.newspot-stack.q2 .newspot-card:nth-child(1){ left:125px; top:162px; transform:rotate(11.62deg); z-index:1; }
+.newspot-stack.q2 .newspot-card:nth-child(2){ left:12px;  top:57px;  transform:rotate(-5.3deg);  z-index:2; }
+.newspot-stack.q3 .newspot-card:nth-child(1){ left:32px;  top:226px; transform:rotate(2.02deg);  z-index:1; }
+.newspot-stack.q3 .newspot-card:nth-child(2){ left:125px; top:122px; transform:rotate(-8.06deg); z-index:2; }
+.newspot-stack.q3 .newspot-card:nth-child(3){ left:23px;  top:19px;  transform:rotate(11.63deg); z-index:3; }
+.newspot-stack.q4 .newspot-card:nth-child(1){ left:23px;  top:19px;  transform:rotate(11.63deg); z-index:4; }
+.newspot-stack.q4 .newspot-card:nth-child(2){ left:125px; top:82px;  transform:rotate(-8.06deg); z-index:3; }
+.newspot-stack.q4 .newspot-card:nth-child(3){ left:11px;  top:158px; transform:rotate(-3.11deg); z-index:2; }
+.newspot-stack.q4 .newspot-card:nth-child(4){ left:120px; top:218px; transform:rotate(13.19deg); z-index:1; }
 
 /* ============================================================
  * lastmonth — 막대 그래프 (max 200px) (Figma 4672:942389)
@@ -229,14 +248,14 @@ body {
 .lastmonth .chart { display: flex; gap: 36px; justify-content: center; align-items: flex-end; }
 .lastmonth .col { display: flex; flex-direction: column; align-items: center; }
 .lastmonth .bar { width: 100px; border-radius: 8px; }
-.lastmonth .bar.win { background: linear-gradient(120.12deg, #FA747A 23.1%, #FB5983 75.2%); }
-.lastmonth .bar.lose { background: rgba(255,255,255,0.8); }
+.lastmonth .bar.this { background: linear-gradient(120.12deg, #FA747A 23.1%, #FB5983 75.2%); }
+.lastmonth .bar.last { background: rgba(255,255,255,0.8); }
 .lastmonth .cnt {
   font-weight: 600; font-size: 13px; line-height: 17px;
   padding: 3px 10px; border-radius: 60px; margin-bottom: 8px; white-space: nowrap;
 }
-.lastmonth .cnt.win  { background: #fff; color: var(--pink500); }
-.lastmonth .cnt.lose { background: rgba(40,40,47,0.6); color: rgba(255,255,255,0.7); }
+.lastmonth .cnt.this { background: #fff; color: var(--pink500); }
+.lastmonth .cnt.last { background: rgba(40,40,47,0.6); color: rgba(255,255,255,0.7); }
 .lastmonth .lbl {
   font-weight: 600; font-size: 15px; line-height: 20px; color: var(--gray800);
   margin-top: 12px; white-space: nowrap;
@@ -284,13 +303,13 @@ body {
 /* ============================================================
  * mainspot — 카테고리 TOP5 (전 행 68px·'번', Figma 실측 4672:942860)
  * ============================================================ */
-.mainspot .rows { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.mainspot .rows { display: flex; flex-direction: column; gap: 10px; align-items: stretch; width: 100%; max-width: 340px; }
 .mainspot .row {
   box-sizing: border-box; display: flex; align-items: center; justify-content: space-between;
-  width: 280px; height: 68px; padding: 0 20px;
+  width: 100%; height: 68px; padding: 0 20px;
   background: var(--white); border-radius: 16px; box-shadow: 0 2px 10px 0 var(--report-shadow); overflow: hidden;
 }
-.mainspot .row.small { height: 68px; }
+.mainspot .row.tall { height: 80px; }   /* 1~3행=80 / 4~5행=68 */
 .mainspot .row-left { display: flex; align-items: center; gap: 8px; flex: 1 1 0; min-width: 0; }
 .mainspot .row-icon { flex: none; width: 20px; height: 20px; object-fit: contain; }
 .mainspot .row-name {
@@ -317,7 +336,8 @@ body {
 .mostlong .card--dummy { transform: rotate(7.38deg); opacity: .5; z-index: 1; }
 .mostlong .q-block { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; width: 100%; }
 .mostlong .q { width: 100%; text-align: left; white-space: pre-wrap; font-weight: 600; font-size: 15px; line-height: 20px; color: var(--gray800); }
-.mostlong .meta { width: 100%; text-align: left; font-weight: 600; font-size: 13px; line-height: 17px; color: var(--gray400); }
+.mostlong .place { width: 100%; text-align: left; font-weight: 600; font-size: 13px; line-height: 17px; color: var(--gray600); }
+.mostlong .date  { width: 100%; text-align: left; font-weight: 600; font-size: 13px; line-height: 17px; color: var(--gray400); }
 .mostlong .divider { flex: none; width: 100%; height: 1px; background: var(--gray50); }
 .mostlong .a-wrap { width: 100%; flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 .mostlong .a { text-align: left; white-space: pre-wrap; font-weight: 500; font-size: 14px; line-height: 19px; color: var(--gray600); }
@@ -331,11 +351,15 @@ body {
   width: 100%; max-width: 248px; box-sizing: border-box; padding: 24px 24px 32px;
   background: var(--white); border-radius: 32px; box-shadow: 0 20px 48px 0 var(--report-shadow);
 }
-.first .photo {
-  display: block; width: 100%; height: 140px; object-fit: cover;
-  border: 6px solid var(--white); border-radius: 22px;
-  box-shadow: 0 4px 13px 0 rgba(70,74,82,0.26); box-sizing: border-box;
+/* 대표 사진 2장 폴라로이드 겹침 (R-004 완성 페이지 패턴) */
+.first .pp-frame { position: relative; width: 100%; height: 132px; }
+.first .pp {
+  position: absolute; border: 6px solid var(--white); border-radius: 22px;
+  box-shadow: 0 4px 13px 0 rgba(70,74,82,0.26); overflow: hidden; box-sizing: border-box;
 }
+.first .pp-front { width: 94px; height: 94px; left: 30px; top: 8px;  transform: rotate(-15deg); z-index: 2; }
+.first .pp-back  { width: 84px; height: 84px; left: 67px; top: 28px; transform: rotate(15deg);  z-index: 1; }
+.first .pp-img   { width: 100%; height: 100%; object-fit: cover; border-radius: 16px; display: block; }
 .first-info { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .first-name { font-weight: 700; font-size: 16px; line-height: 22px; color: var(--gray800); }
 .first-date { font-weight: 500; font-size: 13px; line-height: 17px; color: var(--gray800); opacity: 0.5; }

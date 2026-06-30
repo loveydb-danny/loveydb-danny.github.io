@@ -83,15 +83,17 @@
     var grid = h('div', 'cal-grid');
     for (var b = 0; b < firstW; b++) grid.appendChild(h('div', 'cal-cell empty'));
     for (var d = 1; d <= days; d++) {
-      var cell = h('div', 'cal-cell');
       var info = byDay[d];
-      if (info && info.photo_url) {
-        cell.appendChild(imgEl('thumb', info.photo_url, ''));
-      } else if (info && info.category) {
-        cell.appendChild(imgEl('cat', iconUrl(info.category), info.category));
-      } else {
-        cell.appendChild(h('span', 'd', d));
+      var hasPhoto = !!(info && info.photo_url);
+      var hasRec   = !!(info && info.category);
+      var cell = h('div', 'cal-cell' + (hasPhoto ? ' has-photo' : (hasRec ? ' has-rec' : '')));
+      // 사진(셀 전체 cover) → 카테고리 아이콘(날짜 아래) 순으로 깔고, 날짜 숫자는 항상 위에
+      if (hasPhoto) {
+        cell.appendChild(imgEl('cal-photo', info.photo_url, ''));
+      } else if (hasRec) {
+        cell.appendChild(imgEl('cal-cat', iconUrl(info.category), info.category));
       }
+      cell.appendChild(h('span', 'cal-d', d));   // 날짜 항상 표기(앱 캘린더 동일), 사진날=흰색
       grid.appendChild(cell);
     }
     wp.appendChild(grid);
@@ -115,15 +117,14 @@
 
   function pageNewspot(d) {
     var c = h('div', 'content newspot');
-    c.appendChild(headline(['이달, 우리의 새로운 추억 장소는 총 ' + (d.total || 0) + '개']));
+    c.appendChild(headline('이달, 우리의 새로운\n추억 장소는 ' + (d.total || 0) + '개'));
     var cards = (d.places || []).slice(0, 4);
-    var qcls = cards.length <= 2 ? 'q2' : (cards.length === 3 ? 'q3' : 'q4');
+    var qcls = cards.length <= 1 ? 'q1' : (cards.length === 2 ? 'q2' : (cards.length === 3 ? 'q3' : 'q4'));
     var stack = h('div', 'newspot-stack ' + qcls);
     cards.forEach(function (p) {
       var card = h('div', 'newspot-card');
-      var icon = h('div', 'newspot-icon');
-      icon.appendChild(imgEl('newspot-icon-img', iconUrl(p.category), p.place_name));
-      card.appendChild(icon);
+      // 카테고리 아이콘 SVG 자체가 56 원형 칩(원+글리프) → CSS 래퍼 원 없이 직접 56 렌더
+      card.appendChild(imgEl('newspot-icon-img', iconUrl(p.category), p.place_name));
       card.appendChild(h('div', 'newspot-name', p.place_name));
       stack.appendChild(card);
     });
@@ -134,11 +135,8 @@
 
   function pageLastmonth(d) {
     var c = h('div', 'content lastmonth');
-    var head;
-    if (d.this_count > d.last_count) head = '지난달보다 추억을 많이 남겼어요';
-    else if (d.this_count < d.last_count) head = '지난달보다 추억을 조금 남겼어요';
-    else head = '지난달만큼 추억을 남겼어요';
-    c.appendChild(headline([head]));
+    var word = d.this_count > d.last_count ? '많이' : (d.this_count < d.last_count ? '적게' : '똑같이');
+    c.appendChild(headline('지난달보다\n추억을 ' + word + ' 남겼어요'));
     var thisLbl = '', lastLbl = '';
     if (d.year && d.month) {
       thisLbl = d.year + '. ' + d.month;
@@ -146,18 +144,19 @@
       if (pm < 1) { pm = 12; py -= 1; }
       lastLbl = py + '. ' + pm;
     }
+    // 색은 항상 당월=핑크 그라데이션 / 지난달=흰80%. 높이는 승자=200px·패자=비율.
     var max = Math.max(d.this_count, d.last_count) || 1;
     var chart = h('div', 'chart');
-    chart.appendChild(lmCol(d.last_count, lastLbl, d.last_count === max, max));
-    chart.appendChild(lmCol(d.this_count, thisLbl, d.this_count === max, max));
+    chart.appendChild(lmCol(d.last_count, lastLbl, false, d.last_count >= max, max));  // 좌: 지난달
+    chart.appendChild(lmCol(d.this_count, thisLbl, true, d.this_count >= max, max));   // 우: 당월
     c.appendChild(chart);
     return c;
   }
-  function lmCol(cnt, lbl, win, max) {
+  function lmCol(cnt, lbl, isThis, tall, max) {
     var col = h('div', 'col');
-    col.appendChild(h('div', 'cnt ' + (win ? 'win' : 'lose'), cnt + '개'));
-    var bar = h('div', 'bar ' + (win ? 'win' : 'lose'));
-    bar.style.height = Math.round((cnt / max) * 200) + 'px';
+    col.appendChild(h('div', 'cnt ' + (isThis ? 'this' : 'last'), cnt + '개'));
+    var bar = h('div', 'bar ' + (isThis ? 'this' : 'last'));
+    bar.style.height = (tall ? 200 : Math.round((cnt / max) * 200)) + 'px';
     col.appendChild(bar);
     if (lbl) col.appendChild(h('div', 'lbl', lbl));
     return col;
@@ -165,15 +164,15 @@
 
   function pageRevisit(d) {
     var c = h('div', 'content revisit');
-    c.appendChild(headline([(d.place_name || '') + '에서 한번 더 추억을 쌓았어요']));
+    c.appendChild(headline((d.place_name || '') + '에서\n한번 더 추억을 쌓았어요'));
     var photos = h('div', 'photos');
     var past = h('div', 'polaroid polaroid--past');
     past.appendChild(photoOrFallback('photo', (d.past || {}).photo_url, d.place_name));
-    past.appendChild(h('div', 'caption', ((d.past || {}).date || '') + ' 우리'));
+    past.appendChild(h('div', 'caption', fmtDate((d.past || {}).date, '우리')));
     photos.appendChild(past);
     var cur = h('div', 'polaroid polaroid--current');
     cur.appendChild(photoOrFallback('photo', (d.current || {}).photo_url, d.place_name));
-    cur.appendChild(h('div', 'caption caption--accent', ((d.current || {}).date || '') + ' 우리'));
+    cur.appendChild(h('div', 'caption caption--accent', fmtDate((d.current || {}).date, '우리')));
     photos.appendChild(cur);
     c.appendChild(photos);
     return c;
@@ -181,10 +180,11 @@
 
   function pageMainspot(arr) {
     var c = h('div', 'content mainspot');
-    c.appendChild(headline(['이달에 우리가 주로 추억을 남긴 곳은']));
+    c.appendChild(headline('이달에 우리가\n주로 추억을 남긴 곳은'));
+    var tall = arr.length <= 3;   // 1~3행=80px / 4~5행=68px
     var list = h('div', 'rows');
-    arr.forEach(function (m, i) {
-      var row = h('div', 'row' + (i >= 3 ? ' small' : ''));
+    arr.forEach(function (m) {
+      var row = h('div', 'row' + (tall ? ' tall' : ''));
       var left = h('div', 'row-left');
       left.appendChild(imgEl('row-icon', iconUrl(m.category), categoryLabel(m.category)));
       left.appendChild(h('span', 'row-name', categoryLabel(m.category)));
@@ -199,36 +199,43 @@
   function pageMostlong(d) {
     var nick = (data.meta && data.meta.partner_nickname) || '상대방';
     var c = h('div', 'content mostlong');
-    c.appendChild(headline(['이달에 ' + nick + '님이 가장 길게 답변한 추억은']));
-    var meta = d.place_name ? (d.place_name + ' · ' + (d.date || '')) : (d.date || '');
+    c.appendChild(headline('이달에 ' + nick + '님이\n가장 길게 답변한 추억은'));
     var stack = h('div', 'stack');
-    stack.appendChild(mlCard(d, meta, 'card--dummy', true));
-    stack.appendChild(mlCard(d, meta, 'card--main', false));
+    stack.appendChild(mlCard(d, 'card--dummy', true));
+    stack.appendChild(mlCard(d, 'card--main', false));
     c.appendChild(stack);
     return c;
   }
-  function mlCard(d, meta, cls, hidden) {
+  function mlCard(d, cls, hidden) {
     var card = h('div', 'card ' + cls);
     if (hidden) card.setAttribute('aria-hidden', 'true');
     var q = h('div', 'q-block');
     q.appendChild(h('div', 'q', d.question_text));
-    q.appendChild(h('div', 'meta', meta));
+    if (d.place_name) q.appendChild(h('div', 'place', d.place_name));  // 장소명·날짜 줄바꿈(별도 줄)
+    q.appendChild(h('div', 'date', fmtDate(d.date)));
     card.appendChild(q);
     card.appendChild(h('div', 'divider'));
     var aWrap = h('div', 'a-wrap');
-    aWrap.appendChild(h('div', 'a', d.answer));
+    aWrap.appendChild(h('div', 'a', d.answer));   // 길면 a-wrap 내부 스크롤
     card.appendChild(aWrap);
     return card;
   }
 
   function pageFirst(d) {
     var c = h('div', 'content first anim');
-    c.appendChild(headline(['이달에 우리가 처음 쌓은 추억은']));
+    c.appendChild(headline('이달에 우리가\n처음 쌓은 추억을\n한번 떠올려보세요'));
     var card = h('div', 'first-card');
-    card.appendChild(photoOrFallback('photo', d.photo_url, d.place_name));
+    // 대표 사진 2장(R-004 완성 페이지 동일). RPC는 1장 → 앞·뒤 동일 사진 2번. 없으면 폴백.
+    var frame = h('div', 'pp-frame');
+    var back = h('div', 'pp pp-back');
+    back.appendChild(photoOrFallback('pp-img', d.photo_url, d.place_name));
+    var front = h('div', 'pp pp-front');
+    front.appendChild(photoOrFallback('pp-img', d.photo_url, d.place_name));
+    frame.appendChild(back); frame.appendChild(front);
+    card.appendChild(frame);
     var info = h('div', 'first-info');
     info.appendChild(h('div', 'first-name', d.place_name));
-    info.appendChild(h('div', 'first-date', d.date || ''));
+    info.appendChild(h('div', 'first-date', fmtDate(d.date)));
     card.appendChild(info);
     var go = h('button', 'first-go', '보러가기');
     go.addEventListener('click', function () { sendNative('OpenRecord:' + (d.record_id || '')); });
@@ -239,21 +246,30 @@
 
   function pageOutro() {
     var c = h('div', 'content textonly anim');
-    c.appendChild(headline(['다음 달에 더 풍부한 리포트로 찾아올게요']));
+    c.appendChild(headline('다음 달에 더 풍부한\n리포트로 찾아올게요'));
     return c;
   }
   function pageClosing() {
     var c = h('div', 'content textonly anim');
-    c.appendChild(headline(['이달에도 예쁜 사랑 하세요!']));
+    c.appendChild(headline('이달에도 예쁜 사랑 하세요!'));
     return c;
   }
 
-  // ---------- headline w/ accent spans ----------
-  function span(t) { var s = h('span', 'accent', t); return s; }
-  function headline(parts) {
+  // ---------- headline (\n 줄바꿈은 CSS white-space:pre-line) ----------
+  function headline(text) {
     var hl = h('div', 'headline');
-    parts.forEach(function (p) { hl.appendChild(typeof p === 'string' ? document.createTextNode(p) : p); });
+    hl.textContent = Array.isArray(text) ? text.join('\n') : String(text);
     return hl;
+  }
+  // ---------- 날짜 포맷 'yyyy. m. d. (요일)' [+ suffix] ----------
+  var WD = ['일', '월', '화', '수', '목', '금', '토'];
+  function fmtDate(raw, suffix) {
+    if (!raw) return '';
+    var m = String(raw).match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (!m) return suffix ? (raw + ' ' + suffix) : String(raw);
+    var wd = new Date(+m[1], +m[2] - 1, +m[3]).getDay();
+    var s = (+m[1]) + '. ' + (+m[2]) + '. ' + (+m[3]) + '. (' + WD[wd] + ')';
+    return suffix ? s + ' ' + suffix : s;
   }
 
   // ---------- category label (15 dbValue → 한글, 1차 골격) ----------
@@ -270,7 +286,7 @@
   pages.push({ cls: 'cover', node: pageCover() });
   if (data.brief) pages.push({ node: pageBrief(data.brief) });
   if (data.newspot && (data.newspot.total || 0) > 0) pages.push({ node: pageNewspot(data.newspot) });
-  if (data.lastmonth) {
+  if (data.lastmonth && (data.lastmonth.this_count || 0) > 0) {   // 당월 0개면 페이지 패스
     var lm = {}; for (var lk in data.lastmonth) lm[lk] = data.lastmonth[lk];
     lm.year = cfg.year; lm.month = cfg.month;
     pages.push({ node: pageLastmonth(lm) });
@@ -314,7 +330,7 @@
     p.el = slide;
     app.appendChild(slide);
   });
-  document.body.appendChild(app);
+  // app은 이미지 프리로드 후 body에 append (사진 팝인 방지, 아래 reveal)
 
   // 앱바 close는 cloneNode로 복제됨 → 위임 재바인딩
   app.addEventListener('click', function (e) {
@@ -332,7 +348,29 @@
   }
   function next() { if (cur < pages.length - 1) show(cur + 1); }
   function prev() { if (cur > 0) show(cur - 1); }
-  show(0);
+
+  // ---------- 이미지 프리로드 후 reveal (사진 팝인 방지, #1) ----------
+  var loader = h('div', 'report-loader');
+  loader.appendChild(h('div', 'spinner'));
+  document.body.appendChild(loader);
+  function reveal() {
+    document.body.appendChild(app);
+    show(0);
+    if (loader.parentNode) loader.parentNode.removeChild(loader);
+  }
+  (function preload() {
+    var imgs = app.querySelectorAll('img'), urls = [];
+    for (var i = 0; i < imgs.length; i++) { var u = imgs[i].getAttribute('src'); if (u) urls.push(u); }
+    if (!urls.length) { reveal(); return; }
+    var remaining = urls.length, done = false;
+    function finish() { if (!done) { done = true; reveal(); } }
+    var timer = setTimeout(finish, 6000);   // 안전망: 6s 초과 시 그냥 진행
+    urls.forEach(function (u) {
+      var im = new Image();
+      function one() { if (--remaining <= 0) { clearTimeout(timer); finish(); } }
+      im.onload = one; im.onerror = one; im.src = u;
+    });
+  })();
 
   // ---------- native bridge (앱: JS채널 / 브라우저 프리뷰: 콘솔) ----------
   function sendNative(msg) {
