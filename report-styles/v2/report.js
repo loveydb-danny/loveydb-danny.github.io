@@ -258,7 +258,7 @@
   }
   function pageClosing() {
     var c = h('div', 'content textonly anim');
-    c.appendChild(headline('이달에도 예쁜 사랑 하세요!'));
+    c.appendChild(headline('언제나 예쁜 사랑 하세요'));
     return c;
   }
 
