@@ -143,7 +143,9 @@ body {
   from { opacity: 0; transform: translateY(40px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.slide.active .anim { animation: rise .8s ease-out both; }
+/* 진입 애니메이션 — 모든 페이지(커버 포함)에 적용 */
+.slide.active > .content { animation: rise .8s ease-out both; }
+.slide.cover.active .cover-wrap > * { animation: rise .8s ease-out both; }
 
 /* ============================================================
  * 커버 (ReportMain) — 상단 정렬 (Figma 4678:946280 실측)

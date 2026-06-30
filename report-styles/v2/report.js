@@ -333,10 +333,12 @@
     }
     slide.appendChild(appbar.cloneNode(true));
     slide.appendChild(p.node);
-    // 탭존
-    var prevZ = h('div', 'tapzone prev'); prevZ.addEventListener('click', prev);
-    var nextZ = h('div', 'tapzone next'); nextZ.addEventListener('click', next);
-    slide.appendChild(prevZ); slide.appendChild(nextZ);
+    // 탭존 (커버 제외 — 커버는 CTA 버튼으로만 다음 페이지 이동)
+    if (p.cls !== 'cover') {
+      var prevZ = h('div', 'tapzone prev'); prevZ.addEventListener('click', prev);
+      var nextZ = h('div', 'tapzone next'); nextZ.addEventListener('click', next);
+      slide.appendChild(prevZ); slide.appendChild(nextZ);
+    }
     p.el = slide;
     app.appendChild(slide);
   });
